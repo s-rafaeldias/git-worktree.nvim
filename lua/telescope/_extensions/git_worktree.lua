@@ -68,6 +68,16 @@ local confirm_deletion = function(forcing)
     return false
 end
 
+local remove_remote_from_branch_name = function(branch)
+    -- TODO: better way to remove remote name in cases when `origin`
+    -- is not the remote name
+    local remote = "origin/"
+    if vim.startswith(branch, remote) then
+        branch = string.sub(branch, string.len(remote) + 1)
+    end
+    return branch
+end
+
 local delete_worktree = function(prompt_bufnr)
     if not confirm_deletion() then
         return
@@ -123,13 +133,11 @@ local create_worktree = function(opts)
                 return
             end
 
+            branch = remove_remote_from_branch_name(branch)
+
             create_input_prompt(function(name)
                 if name == "" then
                     name = branch
-                end
-
-                if vim.startswith(branch, "origin/") then
-                    branch = string.sub(branch, string.len "origin/" + 1)
                 end
                 git_worktree.create_worktree(name, branch)
             end)
