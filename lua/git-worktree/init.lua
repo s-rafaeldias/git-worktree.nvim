@@ -168,7 +168,7 @@ local function change_dirs(path)
     return previous_worktree
 end
 
-local function create_worktree_job(path, branch, found_branch)
+local function create_worktree_job(path, branch, found_branch, opts)
 
     local worktree_add_cmd = 'git'
     local worktree_add_args = {'worktree', 'add'}
@@ -180,6 +180,10 @@ local function create_worktree_job(path, branch, found_branch)
     else
         table.insert(worktree_add_args, path)
         table.insert(worktree_add_args, branch)
+    end
+
+    if opts.commit_ish then
+        table.insert(worktree_add_args, opts.commit_ish)
     end
 
     return Job:new({
@@ -292,8 +296,8 @@ local function has_branch(branch, cb)
     end):start()
 end
 
-local function create_worktree(path, branch, upstream, found_branch)
-    local create = create_worktree_job(path, branch, found_branch)
+local function create_worktree(path, branch, upstream, found_branch, opts)
+    local create = create_worktree_job(path, branch, found_branch, opts)
 
     local worktree_path
     if Path:new(path):is_absolute() then
@@ -384,7 +388,8 @@ local function create_worktree(path, branch, upstream, found_branch)
     create:start()
 end
 
-M.create_worktree = function(path, branch, upstream)
+M.create_worktree = function(path, branch, upstream, opts)
+    opts = opts or {}
     status:reset(8)
 
     if upstream == nil then
@@ -401,7 +406,7 @@ M.create_worktree = function(path, branch, upstream)
         end
 
         has_branch(branch, function(found_branch)
-            create_worktree(path, branch, upstream, found_branch)
+            create_worktree(path, branch, upstream, found_branch, opts)
         end)
     end)
 
